@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cartografia interativa</title>
+<style>
+:root{--bg:#f7f6f2;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+html,body{margin:0;height:100%;background:var(--bg);overflow:hidden}
+#st{position:absolute}
+#st canvas,#st svg{position:absolute;left:0;top:0;width:100%;height:100%;display:block}
+svg{touch-action:none;user-select:none;-webkit-user-select:none}
+svg text{font-family:Helvetica,"Helvetica Neue",Arial,sans-serif;stroke:none;paint-order:normal;fill:#141414}
+.it{cursor:grab}.it:active{cursor:grabbing}
+.wd{cursor:pointer}
+#rs{position:fixed;right:max(12px,env(safe-area-inset-right,0px));bottom:max(12px,env(safe-area-inset-bottom,0px));width:34px;height:34px;border-radius:50%;border:1px solid #d9d6cf;background:#fff;color:#888;font:16px/1 Helvetica,Arial,sans-serif;cursor:pointer;opacity:.6}
+#rs:hover{opacity:1}
+</style>
+</head>
+<body>
+<div id="st"><canvas id="cv"></canvas><svg id="s" viewBox="0 0 1240 1240" role="img" aria-label="Cartografia interativa circular: sujeitos em volta do anel, palavras, fios e manchas de conceito"></svg></div>
+<button id="rs" aria-label="Reiniciar posições" title="reiniciar">↺</button>
+<script>
+const NS='http://www.w3.org/2000/svg',svg=document.getElementById('s'),cv=document.getElementById('cv'),ctx=cv.getContext('2d'),stg=document.getElementById('st');
+const $=(t,a,p)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e};
+const clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
+const mk=s=>()=>{s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
+const CAP='#d43f2c',V=1240,O=120,CX=620,CY=620,R=410,D2R=Math.PI/180,INK='#141414',BG='#f7f6f2';
+const INIT={
+ sub:{eu:{a:-90,h:42,t:'EU',c:'#7d5e8c'},car:{a:30,h:42,t:'FLÁVIO CARSALADE',c:'#2b7d8c'},alu:{a:150,h:46,t:'ESTUDANTES',c:'#e07a4f'}},
+ pin:{b1:{x:428,y:474,t:['1º','BIMESTRE']},b2:{x:572,y:526,t:['2º','BIMESTRE']}},
+ tag:{desenhos:{x:300,y:350,c:0,t:'DESENHOS'},ideias:{x:350,y:650,c:1,t:'IDEIAS'},entregas:{x:230,y:520,c:0,t:'ENTREGAS'},pedagogia:{x:590,y:290,c:1,t:'PEDAGOGIA'},patrimonio:{x:740,y:350,c:0,t:'PATRIMÔNIO'},orientacoes:{x:700,y:690,c:0,t:'ORIENTAÇÕES'}},
+ ring:{autonomia:{x:280,y:440,rx:150,ry:115,col:[62,152,108],c2:[178,214,186],sd:3},lugar:{x:705,y:450,rx:130,ry:105,col:[201,160,38],c2:[238,216,150],sd:11},desvio:{x:520,y:745,rx:95,ry:75,col:[214,84,132],c2:[240,180,200],sd:23}}
+};
+for(const g of['pin','tag','ring'])for(const k in INIT[g]){INIT[g][k].x+=O;INIT[g][k].y+=O}
+const W={
+ eu:['CURIOSIDADE','DESEJO','ESCUTA','DESLOCAMENTO','AFETAÇÃO','MEMÓRIA','OBSERVAÇÃO','INQUIETAÇÃO','EXPERIMENTAÇÃO','REPERTÓRIO','DÚVIDA','PRESENÇA','SENSIBILIDADE','DESCOBERTA','TRANSFORMAÇÃO','PROPOSIÇÃO'],
+ car:['ACOLHIMENTO','GENEROSIDADE','PRECISÃO','RIGOR','CONFIANÇA','PROVOCAÇÃO','CURIOSIDADE','ESCUTA','ABERTURA','PERGUNTA','ARGUMENTAÇÃO','PARTILHA','RECONHECIMENTO','EXPERIÊNCIA','CUIDADO','INTERLOCUÇÃO'],
+ alu:['IMAGINAÇÃO','INTUIÇÃO','INCERTEZA','ESCOLHA','CROQUI','EXPOSIÇÃO','CRÍTICA','REVISÃO','TENTATIVA','INVENÇÃO','ERRO','EXPERIMENTAÇÃO','REPERTÓRIO','ARGUMENTAÇÃO','AUTORIA','DESCOBERTA','APROPRIAÇÃO','DESEJO'],
+ autonomia:['AUTORIA','CONFIANÇA','ESCOLHA','CRITÉRIO','ARGUMENTAÇÃO','DECISÃO','RESPONSABILIDADE','LIBERDADE','VOZ','POSICIONAMENTO','RECONHECIMENTO','APROPRIAÇÃO','EMANCIPAÇÃO','DISCERNIMENTO','EXPERIMENTAÇÃO'],
+ lugar:['VESTÍGIO','PATRIMÔNIO','PRESENÇA','MEMÓRIA','CAMINHADA','PERCURSO','PERCEPÇÃO','ATMOSFERA','APROPRIAÇÃO','PAISAGEM','CORPO','MURO','SOMBRA','LAGOA','AUSÊNCIA','CIRCULAÇÃO','ENCONTRO','PERTENCIMENTO'],
+ desvio:['INFLEXÃO','EXPERIMENTAÇÃO','DESLOCAMENTO','REVISÃO','ERRÂNCIA','INVENÇÃO','TRANSFORMAÇÃO','SUSPENSÃO','DESCOBERTA','RUPTURA','IMPREVISTO','RECOMEÇO','RETORNO','ALTERNATIVA','POSSIBILIDADE','ESTRANHAMENTO']};
+/* feixes: cada palavra do meio amarrada aos sujeitos e bimestres */
+const LINKS={
+ desenhos:['alu','eu','car','b1','b2'],ideias:['alu','eu','car'],entregas:['alu','eu','car','b2'],
+ pedagogia:['eu','car','alu'],patrimonio:['b1','b2','car','alu','eu'],orientacoes:['eu','car','alu','b1','b2']};
+/* relações entre palavras: [campo, palavra] — campo pode ser sujeito, mancha ou palavra do meio */
+const t=w=>['tag',w],eu=w=>['eu',w],ca=w=>['car',w],al=w=>['alu',w],au=w=>['autonomia',w],lu=w=>['lugar',w],de=w=>['desvio',w];
+const REL2=[
+ /* pedidos */
+ [ca('PRECISÃO'),t('desenhos')],[ca('RIGOR'),t('desenhos')],[ca('ABERTURA'),t('desenhos')],[ca('ARGUMENTAÇÃO'),t('desenhos')],[al('ARGUMENTAÇÃO'),t('desenhos')],[ca('INTERLOCUÇÃO'),t('desenhos')],
+ [eu('ESCUTA'),ca('ESCUTA')],[ca('ESCUTA'),['alu']],[eu('ESCUTA'),['alu']],
+ [eu('CURIOSIDADE'),ca('CURIOSIDADE')],[ca('CURIOSIDADE'),['alu']],[eu('CURIOSIDADE'),['alu']],
+ [eu('DESEJO'),al('DESEJO')],[al('DESEJO'),['car']],[eu('DESEJO'),['car']],
+ [eu('DÚVIDA'),['alu']],[eu('DÚVIDA'),['car']],
+ [eu('DESCOBERTA'),ca('ESCUTA')],[al('DESCOBERTA'),ca('ESCUTA')],[eu('SENSIBILIDADE'),ca('ESCUTA')],[eu('SENSIBILIDADE'),eu('ESCUTA')],
+ [eu('PRESENÇA'),lu('PRESENÇA')],
+ [al('REPERTÓRIO'),lu('MEMÓRIA')],[eu('REPERTÓRIO'),eu('MEMÓRIA')],[al('REPERTÓRIO'),ca('PROVOCAÇÃO')],[al('REPERTÓRIO'),ca('PERGUNTA')],[eu('REPERTÓRIO'),ca('PERGUNTA')],
+ [al('CROQUI'),t('desenhos')],[al('EXPOSIÇÃO'),ca('ESCUTA')],
+ [au('AUTORIA'),t('pedagogia')],[al('AUTORIA'),t('pedagogia')],[al('ARGUMENTAÇÃO'),t('pedagogia')],[al('REPERTÓRIO'),t('pedagogia')],[al('EXPERIMENTAÇÃO'),t('pedagogia')],
+ /* elaboradas a partir da dissertação */
+ [lu('VESTÍGIO'),t('patrimonio')],[lu('PATRIMÔNIO'),t('patrimonio')],[lu('CAMINHADA'),eu('DESLOCAMENTO')],[lu('VESTÍGIO'),de('INFLEXÃO')],[lu('PERCURSO'),de('ERRÂNCIA')],
+ [eu('OBSERVAÇÃO'),lu('PERCEPÇÃO')],[eu('AFETAÇÃO'),lu('ATMOSFERA')],[eu('MEMÓRIA'),lu('MEMÓRIA')],[eu('DESLOCAMENTO'),de('DESLOCAMENTO')],[eu('TRANSFORMAÇÃO'),de('TRANSFORMAÇÃO')],
+ [eu('INQUIETAÇÃO'),t('ideias')],[eu('PROPOSIÇÃO'),t('ideias')],[al('IMAGINAÇÃO'),t('ideias')],[al('INTUIÇÃO'),t('ideias')],[ca('PROVOCAÇÃO'),t('ideias')],
+ [al('ERRO'),de('ERRÂNCIA')],[al('REVISÃO'),de('REVISÃO')],[al('TENTATIVA'),de('EXPERIMENTAÇÃO')],[al('INVENÇÃO'),de('INVENÇÃO')],[al('INCERTEZA'),de('SUSPENSÃO')],[al('TENTATIVA'),t('desenhos')],
+ [ca('RIGOR'),au('CRITÉRIO')],[ca('CONFIANÇA'),au('CONFIANÇA')],[ca('RECONHECIMENTO'),au('RECONHECIMENTO')],[al('ESCOLHA'),au('ESCOLHA')],[al('APROPRIAÇÃO'),au('APROPRIAÇÃO')],[lu('APROPRIAÇÃO'),au('APROPRIAÇÃO')],[al('ARGUMENTAÇÃO'),au('ARGUMENTAÇÃO')],[au('VOZ'),al('EXPOSIÇÃO')],
+ [ca('PERGUNTA'),t('orientacoes')],[ca('INTERLOCUÇÃO'),t('orientacoes')],[ca('CUIDADO'),t('orientacoes')],[al('REVISÃO'),t('orientacoes')],[ca('PROVOCAÇÃO'),de('INFLEXÃO')],[eu('ESCUTA'),t('orientacoes')],
+ [al('CRÍTICA'),t('entregas')],[al('EXPOSIÇÃO'),t('entregas')],[au('DECISÃO'),t('entregas')],[au('RESPONSABILIDADE'),t('entregas')],[ca('RIGOR'),t('entregas')],
+ [au('EMANCIPAÇÃO'),t('pedagogia')],[ca('PARTILHA'),t('pedagogia')],[ca('ACOLHIMENTO'),al('EXPOSIÇÃO')],[ca('GENEROSIDADE'),eu('PRESENÇA')],[ca('EXPERIÊNCIA'),eu('REPERTÓRIO')],
+ [lu('MURO'),de('RUPTURA')],[lu('CORPO'),eu('PRESENÇA')],[de('ESTRANHAMENTO'),eu('INQUIETAÇÃO')],[de('ALTERNATIVA'),t('ideias')],[de('RECOMEÇO'),al('TENTATIVA')],[de('RETORNO'),t('patrimonio')]];
+const REL={
+ autonomia:[['sub','alu',.8],['tag','desenhos',1.5],['tag','patrimonio',-.5],['tag','orientacoes',-.5],['ring','desvio',.8]],
+ desvio:[['tag','orientacoes',.8],['tag','desenhos',1.8],['tag','entregas',-.5],['tag','patrimonio',-.5],['ring','autonomia',.8],['ring','lugar',.8]],
+ lugar:[['tag','orientacoes',.8],['tag','patrimonio',.8],['tag','entregas',-.5],['tag','desenhos',0],['ring','desvio',.8]]};
+let ST=JSON.parse(JSON.stringify(INIT));
+try{const sv=JSON.parse(localStorage.getItem('cart-pos5')||'null');if(sv){for(const k in sv.sub||{})if(ST.sub[k])ST.sub[k].a=sv.sub[k];for(const g of['tag','ring'])for(const k in sv[g]||{})if(ST[g][k]){ST[g][k].x=sv[g][k][0];ST[g][k].y=sv[g][k][1]}}}catch(e){}
+const onR=(a,r)=>[CX+r*Math.cos(a*D2R),CY+r*Math.sin(a*D2R)];
+const arcD=(a0,a1,r,sw=1)=>{const p=onR(a0,r),q=onR(a1,r);return`M${p[0].toFixed(1)} ${p[1].toFixed(1)}A${r} ${r} 0 ${Math.abs(a1-a0)>180?1:0} ${sw} ${q[0].toFixed(1)} ${q[1].toFixed(1)}`};
+const f1=v=>v.toFixed(1);
+let items=[],byKey={},cur=null,off=[0,0],bundles=[],rels=[],L={},focus=null,hoverF=null;
+function layout(){const s=Math.min(innerWidth,innerHeight)/V,w=V*s;Object.assign(stg.style,{width:w+'px',height:w+'px',left:(innerWidth-w)/2+'px',top:(innerHeight-w)/2+'px'});const dpr=Math.min(devicePixelRatio||1,2);cv.width=cv.height=Math.round(w*dpr)}
+const setF=id=>{focus=id};
+function build(){
+ layout();svg.innerHTML='';items=[];byKey={};
+ $('defs',{},svg).innerHTML='<filter id="bl" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="12"/></filter><filter id="sh" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="1" dy="2" stdDeviation="1.6" flood-opacity=".18"/></filter>';
+ ['ring','cap','rel','str','dots','words','swords','subs','pins','tags'].forEach(k=>L[k]=$('g',['cap','rel','str','dots','pins'].includes(k)?{'pointer-events':'none'}:{},svg));
+ const reg=(type,key,o,g,x)=>{const it=Object.assign({type,key,o,g,I:0,e:0,ph:Math.random()},x);items.push(it);byKey[key]=it;return it};
+ $('circle',{cx:CX,cy:CY,r:R,fill:'none',stroke:'#dedbd4','stroke-width':10},L.ring);
+ for(let a=0;a<360;a+=3.2){const p=onR(a,R-22);$('circle',{cx:p[0],cy:p[1],r:2,fill:'#d3cfc7'},L.ring)}
+ for(const k in ST.sub){const o=ST.sub[k],g=$('g',{class:'it'},L.subs);
+  const glow=$('path',{fill:'none',stroke:o.c,'stroke-width':34,opacity:0,filter:'url(#bl)'},g);
+  const arc=$('path',{fill:'none',stroke:o.c,'stroke-width':16},g);
+  const hit=$('path',{fill:'none',stroke:'transparent','stroke-width':60},g);
+  const tp=$('path',{id:'tp'+k,fill:'none',stroke:'none'},g);
+  const tx=$('text',{'font-size':18,'font-weight':700,'letter-spacing':3},g);$('textPath',{href:'#tp'+k,startOffset:'50%','text-anchor':'middle'},tx).textContent=o.t;
+  const wl=W[k].map(w=>{const tt=$('text',{class:'wd','font-size':10.5,'font-weight':400,'letter-spacing':.8},L.words);tt.textContent=w;const d=$('circle',{r:2.6,fill:o.c},L.words);hov(tt,k+'|'+w);return{w,t:tt,d}});
+  reg('sub',k,o,g,{glow,arc,hit,tp,wl})}
+ capillary();
+ for(const k in ST.pin){const o=ST.pin[k];$('circle',{cx:o.x,cy:o.y,r:40,fill:CAP},L.pins);
+  $('text',{x:o.x,y:o.y-3,'text-anchor':'middle','font-size':17,'font-weight':700,style:'fill:#f7f6f2'},L.pins).textContent=o.t[0];
+  $('text',{x:o.x,y:o.y+15,'text-anchor':'middle','font-size':10.5,'font-weight':700,'letter-spacing':1.6,style:'fill:#f7f6f2'},L.pins).textContent=o.t[1]}
+ for(const k in ST.ring){const o=ST.ring[k],g=$('g',{class:'it'},L.tags);$('circle',{r:44,fill:'transparent'},g);
+  $('text',{y:6,'text-anchor':'middle','font-size':18,'font-weight':700,'letter-spacing':3},g).textContent=k.toUpperCase();
+  const q=mk(o.sd*7+1),a0=q()*6.2832,n=W[k].length,sw=W[k].map((w,i)=>{const a=i?a0+i*2.39996:Math.PI/2,rr=i?.32+.6*Math.sqrt(i/n):.24;
+   const tt=$('text',{class:'wd','text-anchor':'middle','font-size':10.5,'font-weight':400,'letter-spacing':.8},L.swords);tt.textContent=w;hov(tt,k+'|'+w);return{w,t:tt,a,rr,on:false}});
+  reg('ring',k,o,g,{sc:1,hot:0,sw})}
+ for(const k in ST.tag){const o=ST.tag[k],g=$('g',{class:'it'},L.tags),halo=$('ellipse',{rx:60,ry:30,fill:'#999',filter:'url(#bl)',opacity:0},g),lab=$('g',{transform:'rotate(-45)'},g);
+  const rc=$('rect',{y:-13,height:26,rx:13,fill:o.c?BG:'#34312d',stroke:'#34312d','stroke-width':1.2,filter:'url(#sh)'},lab);
+  const tx=$('text',{y:4.5,'text-anchor':'middle','font-size':12,'font-weight':700,'letter-spacing':1.6,style:o.c?'':'fill:#f7f6f2'},lab);tx.textContent=o.t;
+  let tw=o.t.length*9;try{tw=tx.getComputedTextLength()||tw}catch(e){}const w=tw+26;
+  rc.setAttribute('x',-w/2);rc.setAttribute('width',w);$('rect',{x:-w/2-8,y:-18,width:w+16,height:36,fill:'transparent'},lab);
+  halo.setAttribute('rx',w*.62);halo.setAttribute('transform','rotate(-45)');
+  g.addEventListener('pointerenter',()=>{hoverF='tag|'+k});g.addEventListener('pointerleave',()=>{hoverF=null});
+  reg('tag',k,o,g,{halo})}
+ /* feixes */
+ bundles=[];for(const tg in LINKS)for(const an of LINKS[tg]){const col=ST.sub[an]?ST.sub[an].c:CAP,els=[0,1,2].map(()=>$('path',{fill:'none',stroke:col,'stroke-width':1.15,opacity:.7},L.str));bundles.push({tg,an,els})}
+ rels=REL2.map(r=>({r,p:$('path',{fill:'none',stroke:'#34312d','stroke-width':.9,opacity:.32},L.rel)}));
+ L.dotsInner=$('g',{},L.dots);
+ items.forEach(place);
+}
+function capillary(){
+ const g=L.cap,q=mk(77),A=ST.pin.b1,B=ST.pin.b2,dx=B.x-A.x,dy=B.y-A.y,dl=Math.hypot(dx,dy),ux=dx/dl,uy=dy/dl,nx=-uy,ny=ux,mx=(A.x+B.x)/2,my=(A.y+B.y)/2,ab=Math.atan2(dy,dx);
+ /* nuvem granulada */
+ let dots='';for(let i=0;i<900;i++){const a=q()*6.2832,r=Math.pow(q(),.6)*175,c=q()<.5?A:B,x=c.x+Math.cos(a)*r+(mx-c.x)*.3,y=c.y+Math.sin(a)*r*.9+(my-c.y)*.3;dots+=`<circle cx="${f1(x)}" cy="${f1(y)}" r="${(.6+q()*.9).toFixed(2)}" fill="${CAP}" opacity="${(.5*(1-r/175)+.06).toFixed(2)}"/>`}
+ g.insertAdjacentHTML('beforeend',dots);
+ /* ponte com um vazio no meio */
+ const br=(off,w)=>$('path',{d:`M${f1(A.x)} ${f1(A.y)}Q${f1(mx+nx*off)} ${f1(my+ny*off)} ${f1(B.x)} ${f1(B.y)}`,fill:'none',stroke:CAP,'stroke-width':w,'stroke-linecap':'round'},g);
+ br(40,20);br(-30,12);br(6,4);br(62,1.8);br(-52,1.4);
+ /* capilares */
+ const tips=[];
+ const grow=(x,y,a,len,w,d)=>{const ex=x+Math.cos(a)*len,ey=y+Math.sin(a)*len,ca=a+(q()-.5)*.6,cx=x+Math.cos(ca)*len*.55,cy=y+Math.sin(ca)*len*.55;
+  $('path',{d:`M${f1(x)} ${f1(y)}Q${f1(cx)} ${f1(cy)} ${f1(ex)} ${f1(ey)}`,fill:'none',stroke:CAP,'stroke-width':f1(w),'stroke-linecap':'round',opacity:(1-d*.13).toFixed(2)},g);
+  if(d<4){const sp=.34+q()*.35;grow(ex,ey,a-sp,len*(.68+q()*.12),w*.6,d+1);grow(ex,ey,a+sp,len*(.68+q()*.12),w*.6,d+1);if(q()<.25)grow(ex,ey,a+(q()-.5)*.3,len*.6,w*.5,d+2)}else tips.push([ex,ey])};
+ for(const[c,base]of[[A,ab+Math.PI],[B,ab]]){const n=9;for(let i=0;i<n;i++){const a=base+(-1.15+2.3*i/(n-1))*Math.PI*.62+(q()-.5)*.25,r0=36;grow(c.x+Math.cos(a)*r0,c.y+Math.sin(a)*r0,a,34+q()*18,5.5,0)}}
+ /* malha de células entre as pontas */
+ let mesh='';tips.forEach((p,i)=>{const near=tips.map((t,j)=>[Math.hypot(t[0]-p[0],t[1]-p[1]),j]).filter(x=>x[1]!=i&&x[0]<22).sort((a,b)=>a[0]-b[0]).slice(0,2);near.forEach(([d,j])=>{if(j>i)mesh+=`<line x1="${f1(p[0])}" y1="${f1(p[1])}" x2="${f1(tips[j][0])}" y2="${f1(tips[j][1])}" stroke="${CAP}" stroke-width=".7" stroke-linecap="round" opacity=".55"/>`})});
+ g.insertAdjacentHTML('beforeend',mesh);
+}
+function hov(el,id){el.addEventListener('pointerenter',()=>{hoverF=id});el.addEventListener('pointerleave',()=>{if(hoverF==id)hoverF=null});el.addEventListener('pointerdown',e=>{focus=focus==id?null:id;e.stopPropagation()})}
+function place(it){
+ if(it.type=='sub'){const o=it.o,d0=arcD(o.a-o.h,o.a+o.h,R);it.arc.setAttribute('d',d0);it.hit.setAttribute('d',d0);it.glow.setAttribute('d',d0);
+  const m=((o.a%360)+360)%360,bottom=m>15&&m<165;it.tp.setAttribute('d',bottom?arcD(o.a+o.h,o.a-o.h,R+150,0):arcD(o.a-o.h,o.a+o.h,R+138,1));
+  const n=it.wl.length;it.wl.forEach((w,i)=>{const a=o.a-o.h*.92+(2*o.h*.92)*i/(n-1),am=((a%360)+360)%360,left=am>90&&am<270,p=onR(a,R+16),q=onR(a,R+24);w.ang=a;
+   w.d.setAttribute('cx',f1(p[0]));w.d.setAttribute('cy',f1(p[1]));
+   w.t.setAttribute('x',f1(q[0]));w.t.setAttribute('y',f1(q[1]));w.t.setAttribute('dy','.35em');w.t.setAttribute('text-anchor',left?'end':'start');w.t.setAttribute('transform',`rotate(${f1(left?a+180:a)} ${f1(q[0])} ${f1(q[1])})`)})}
+ else it.g.setAttribute('transform',`translate(${f1(it.o.x)} ${f1(it.o.y)})`)}
+/* posições de extremidade */
+function ep(f,w){
+ if(f=='tag')return[ST.tag[w].x,ST.tag[w].y];
+ if(ST.sub[f]){const it=byKey[f];if(w){const x=it.wl.find(z=>z.w==w);if(x)return onR(x.ang,R+12)}return onR(ST.sub[f].a,R-22)}
+ const r=byKey[f];if(w){const x=r.sw.find(z=>z.w==w);if(x&&x.on)return[r.o.x+Math.cos(x.a)*x.rr*r.o.rx*r.sc,r.o.y+Math.sin(x.a)*x.rr*r.o.ry*r.sc]}return[r.o.x,r.o.y]}
+const idOf=(f,w)=>f=='tag'?'tag|'+w:(w?f+'|'+w:f);
+function hits(id,ids){if(!id)return true;const[f,w]=id.split('|');return ids.some(x=>x==id||(!w&&x.split('|')[0]==f)||(w&&x==f))}
+function draw(){
+ const F=hoverF||focus||(cur?(cur.type=='tag'?'tag|'+cur.key:cur.key):null);
+ /* feixes com fendas ordenadas no arco */
+ const slots={};for(const b of bundles)if(ST.sub[b.an])(slots[b.an]=slots[b.an]||[]).push(b);
+ for(const k in slots){const o=ST.sub[k],c=onR(o.a,R),list=slots[k];list.forEach(b=>{const T=ST.tag[b.tg];b.ang=Math.atan2(T.y-CY,T.x-CX)/D2R});
+  const rel=a=>((a-o.a+540)%360)-180;list.sort((x,y)=>rel(x.ang)-rel(y.ang));list.forEach((b,i)=>{b.slot=o.a-o.h*.85+(2*o.h*.85)*(i+.5)/list.length})}
+ let dots='';
+ for(const b of bundles){const T=ST.tag[b.tg],on=hits(F,['tag|'+b.tg,b.an]),op=F?(on?.95:.07):.68,wd=F&&on?1.6:1.15;
+  b.els.forEach((el,j)=>{const u=j-1;let d;
+   if(ST.sub[b.an]){const a=b.slot+u*1.6,A=onR(a,R-22),Ai=onR(a,R-170);d=`M${f1(T.x+u*4)} ${f1(T.y-u*4)}C${f1(T.x+(Ai[0]-T.x)*.45)} ${f1(T.y+(Ai[1]-T.y)*.45)} ${f1(Ai[0])} ${f1(Ai[1])} ${f1(A[0])} ${f1(A[1])}`;
+    if(op>.2)dots+=`<circle cx="${f1(A[0])}" cy="${f1(A[1])}" r="${j==1?4.2:2.8}" fill="${ST.sub[b.an].c}"/>`}
+   else{const P=ST.pin[b.an],mx=(T.x+P.x)/2,my=(T.y+P.y)/2,dx=P.x-T.x,dy=P.y-T.y,l=Math.hypot(dx,dy)||1,bend=.12*l+u*6;d=`M${f1(T.x+u*4)} ${f1(T.y-u*4)}Q${f1(mx-dy/l*bend)} ${f1(my+dx/l*bend)} ${f1(P.x)} ${f1(P.y)}`}
+   el.setAttribute('d',d);el.setAttribute('opacity',op);el.setAttribute('stroke-width',wd)})}
+ L.dotsInner.innerHTML=dots;
+ for(const e of rels){const[a,b]=e.r,p=ep(a[0],a[1]),q=ep(b[0],b[1]),mx=(p[0]+q[0])/2,my=(p[1]+q[1])/2,c=[mx+(CX-mx)*.3,my+(CY-my)*.3];
+  const on=hits(F,[idOf(a[0],a[1]),idOf(b[0],b[1])]);
+  e.p.setAttribute('d',`M${f1(p[0])} ${f1(p[1])}Q${f1(c[0])} ${f1(c[1])} ${f1(q[0])} ${f1(q[1])}`);e.p.setAttribute('opacity',F?(on?.95:.05):.3);e.p.setAttribute('stroke-width',F&&on?1.5:.9)}
+}
+/* relações de tamanho */
+const ringF=(o,x,y,sc)=>clamp(1-Math.hypot((x-o.x)/(o.rx*sc),(y-o.y)/(o.ry*sc)))**.7;
+const pr=(ax,ay,bx,by)=>clamp(1-Math.max(0,Math.hypot(ax-bx,ay-by)-60)/430);
+const anchor=(g,k)=>g=='sub'?onR(ST.sub[k].a,R):[ST[g][k].x,ST[g][k].y];
+const pos0=(g,k)=>g=='sub'?onR(INIT.sub[k].a,R):[INIT[g][k].x,INIT[g][k].y];
+function prox(t){
+ const rings=items.filter(i=>i.type=='ring');
+ for(const r of rings){const o=r.o,i0=INIT.ring[r.key];let s=1,mid=0,hot=0;
+  for(const[g,k,w]of REL[r.key]){const c=anchor(g,k),c0=pos0(g,k),p1=pr(o.x,o.y,c[0],c[1]);if(w>0)hot=Math.max(hot,p1);
+   if(w===0)mid=Math.max(mid,p1);else s+=w*(p1-pr(i0.x,i0.y,c0[0],c0[1]))}
+  s+=(1-s)*mid*.6;r.sc+=(clamp(s,.45,2.8)-r.sc)*.12;r.hot=hot;
+  const nv=Math.max(3,Math.round(r.sc*r.sc*o.rx*o.ry/2200));
+  r.sw.forEach((z,i)=>{z.on=i<nv;const x=o.x+Math.cos(z.a)*z.rr*o.rx*r.sc,y=o.y+Math.sin(z.a)*z.rr*o.ry*r.sc;z.t.setAttribute('x',f1(x));z.t.setAttribute('y',f1(y));z.t.style.display=z.on?'':'none'})}
+ for(const it of items){let v=0,col='#999';const tr=(x,c)=>{if(x>v){v=x;col=c}};
+  if(it.type=='tag'){for(const r of rings)tr(ringF(r.o,it.o.x,it.o.y,r.sc),`rgb(${r.o.col})`)}
+  else if(it.type=='sub'){const p=anchor('sub',it.key);for(const r of rings)tr(clamp(1-(Math.hypot(p[0]-r.o.x,p[1]-r.o.y)-r.o.rx*r.sc)/160),it.o.c)}
+  else continue;
+  it.I+=(v-it.I)*.1;const ps=.5+.5*Math.sin(t*1.9+it.ph*6.28);it.e=it.I*ps;
+  if(it.halo){if(v>.02)it.halo.setAttribute('fill',col);it.halo.setAttribute('opacity',(it.I*(.2+.45*ps)).toFixed(3))}
+  if(it.glow)it.glow.setAttribute('opacity',(it.I*(.15+.4*ps)).toFixed(3))}
+}
+function stains(t){
+ const k=cv.width/V;ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,cv.width,cv.height);ctx.setTransform(k,0,0,k,0,0);
+ const LV=9;
+ for(const r of items){if(r.type!='ring')continue;const o=r.o,q=mk(o.sd),ph=[q()*6.3,q()*6.3,q()*6.3,q()*6.3],s=r.sc*(1+.04*Math.sin(t*1.3+o.sd)*r.hot),ex=o.rx*s,ey=o.ry*s,cx=[(q()-.5)*.25,(q()-.5)*.25];
+  for(let L2=0;L2<LV;L2++){const f=1-L2/LV,tw=t*.25,u=L2/(LV-1),cc=o.c2.map((v,i)=>Math.round(v+(o.col[i]-v)*u)).join(',');ctx.beginPath();
+   for(let j=0;j<=72;j++){const a=j/72*6.2832,nz=1+.13*Math.sin(2*a+ph[0]+L2*.35+tw)+.08*Math.sin(3*a+ph[1]-L2*.5)+.05*Math.sin(5*a+ph[2]+L2*.2-tw)+.03*Math.sin(7*a+ph[3]);
+    const x=o.x+cx[0]*ex*(1-f)+ex*f*nz*Math.cos(a),y=o.y+cx[1]*ey*(1-f)+ey*f*nz*Math.sin(a);j?ctx.lineTo(x,y):ctx.moveTo(x,y)}
+   ctx.closePath();ctx.fillStyle=`rgba(${cc},${.1+.03*L2})`;ctx.fill();ctx.strokeStyle=`rgba(${cc},.35)`;ctx.lineWidth=.8;ctx.stroke()}}
+}
+function frame(t){prox(t/1000);draw();stains(t/1000);requestAnimationFrame(frame)}
+const pt=e=>{const p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;const q=p.matrixTransform(svg.getScreenCTM().inverse());return[q.x,q.y]};
+svg.addEventListener('pointerdown',e=>{const g=e.target.closest('.it');if(!g){focus=null;return}cur=items.find(i=>i.g===g);if(!cur)return;const p=pt(e);
+ if(cur.type=='sub')off=[cur.o.a-Math.atan2(p[1]-CY,p[0]-CX)/D2R,0];else off=[cur.o.x-p[0],cur.o.y-p[1]];svg.setPointerCapture(e.pointerId);e.preventDefault()});
+svg.addEventListener('pointermove',e=>{if(!cur)return;const p=pt(e);
+ if(cur.type=='sub')cur.o.a=Math.atan2(p[1]-CY,p[0]-CX)/D2R+off[0];else{cur.o.x=clamp(p[0]+off[0],25,V-25);cur.o.y=clamp(p[1]+off[1],25,V-25)}place(cur)});
+const end=()=>{if(!cur)return;cur=null;try{const o={sub:{},tag:{},ring:{}};for(const k in ST.sub)o.sub[k]=ST.sub[k].a;for(const g of['tag','ring'])for(const k in ST[g])o[g][k]=[ST[g][k].x,ST[g][k].y];localStorage.setItem('cart-pos5',JSON.stringify(o))}catch(e){}};
+svg.addEventListener('pointerup',end);svg.addEventListener('pointercancel',end);
+document.getElementById('rs').onclick=()=>{ST=JSON.parse(JSON.stringify(INIT));focus=null;try{localStorage.removeItem('cart-pos5')}catch(e){}build()};
+let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(build,120)});
+build();requestAnimationFrame(frame);
+</script>
+</body>
+</html>
