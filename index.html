@@ -60,9 +60,9 @@ const W={
  eu:['CURIOSIDADE','DESEJO','ESCUTA','DESLOCAMENTO','AFETAÇÃO','MEMÓRIA','OBSERVAÇÃO','INQUIETAÇÃO','EXPERIMENTAÇÃO','REPERTÓRIO','DÚVIDA','PRESENÇA','SENSIBILIDADE','DESCOBERTA','TRANSFORMAÇÃO','PROPOSIÇÃO'],
  car:['ACOLHIMENTO','GENEROSIDADE','PRECISÃO','RIGOR','CONFIANÇA','PROVOCAÇÃO','CURIOSIDADE','ESCUTA','ABERTURA','PERGUNTA','ARGUMENTAÇÃO','PARTILHA','RECONHECIMENTO','EXPERIÊNCIA','CUIDADO','INTERLOCUÇÃO'],
  alu:['IMAGINAÇÃO','INTUIÇÃO','INCERTEZA','ESCOLHA','CROQUI','EXPOSIÇÃO','CRÍTICA','REVISÃO','TENTATIVA','INVENÇÃO','ERRO','EXPERIMENTAÇÃO','REPERTÓRIO','ARGUMENTAÇÃO','AUTORIA','DESCOBERTA','APROPRIAÇÃO','DESEJO'],
- autonomia:['AUTORIA','CONFIANÇA','ESCOLHA','CRITÉRIO','ARGUMENTAÇÃO','DECISÃO','RESPONSABILIDADE','LIBERDADE','VOZ','POSICIONAMENTO','RECONHECIMENTO','APROPRIAÇÃO','EMANCIPAÇÃO','DISCERNIMENTO','EXPERIMENTAÇÃO'],
- lugar:['VESTÍGIO','PATRIMÔNIO','PRESENÇA','MEMÓRIA','CAMINHADA','PERCURSO','PERCEPÇÃO','ATMOSFERA','APROPRIAÇÃO','PAISAGEM','CORPO','MURO','SOMBRA','LAGOA','AUSÊNCIA','CIRCULAÇÃO','ENCONTRO','PERTENCIMENTO'],
- desvio:['INFLEXÃO','EXPERIMENTAÇÃO','DESLOCAMENTO','REVISÃO','ERRÂNCIA','INVENÇÃO','TRANSFORMAÇÃO','SUSPENSÃO','DESCOBERTA','RUPTURA','IMPREVISTO','RECOMEÇO','RETORNO','ALTERNATIVA','POSSIBILIDADE','ESTRANHAMENTO']};
+ autonomia:['AUTORIA','CONFIANÇA','ESCOLHA','CRITÉRIO','ARGUMENTAÇÃO','DECISÃO','VOZ','RECONHECIMENTO','APROPRIAÇÃO','EMANCIPAÇÃO','DISCERNIMENTO','EXPERIMENTAÇÃO'],
+ lugar:['VESTÍGIO','PATRIMÔNIO','PRESENÇA','MEMÓRIA','PERCEPÇÃO','ATMOSFERA','APROPRIAÇÃO','PAISAGEM','CORPO','ENCONTRO'],
+ desvio:['INFLEXÃO','EXPERIMENTAÇÃO','DESLOCAMENTO','REVISÃO','ERRÂNCIA','INVENÇÃO','TRANSFORMAÇÃO','SUSPENSÃO','DESCOBERTA','ALTERNATIVA','ESTRANHAMENTO']};
 /* feixes: cada palavra do meio amarrada aos sujeitos e bimestres */
 const LINKS={
  desenhos:['alu','eu','car','b1','b2'],ideias:['alu','eu','car'],entregas:['alu','eu','car','b2'],
@@ -82,18 +82,37 @@ const REL2=[
  [al('CROQUI'),t('desenhos')],[al('EXPOSIÇÃO'),ca('ESCUTA')],
  [au('AUTORIA'),t('pedagogia')],[al('AUTORIA'),t('pedagogia')],[al('ARGUMENTAÇÃO'),t('pedagogia')],[al('REPERTÓRIO'),t('pedagogia')],[al('EXPERIMENTAÇÃO'),t('pedagogia')],
  /* elaboradas a partir da dissertação */
- [lu('VESTÍGIO'),t('patrimonio')],[lu('PATRIMÔNIO'),t('patrimonio')],[lu('CAMINHADA'),eu('DESLOCAMENTO')],[lu('VESTÍGIO'),de('INFLEXÃO')],[lu('PERCURSO'),de('ERRÂNCIA')],
+ [lu('VESTÍGIO'),t('patrimonio')],[lu('PATRIMÔNIO'),t('patrimonio')],[lu('VESTÍGIO'),de('INFLEXÃO')],
  [eu('OBSERVAÇÃO'),lu('PERCEPÇÃO')],[eu('AFETAÇÃO'),lu('ATMOSFERA')],[eu('MEMÓRIA'),lu('MEMÓRIA')],[eu('DESLOCAMENTO'),de('DESLOCAMENTO')],[eu('TRANSFORMAÇÃO'),de('TRANSFORMAÇÃO')],
  [eu('INQUIETAÇÃO'),t('ideias')],[eu('PROPOSIÇÃO'),t('ideias')],[al('IMAGINAÇÃO'),t('ideias')],[al('INTUIÇÃO'),t('ideias')],[ca('PROVOCAÇÃO'),t('ideias')],
  [al('ERRO'),de('ERRÂNCIA')],[al('REVISÃO'),de('REVISÃO')],[al('TENTATIVA'),de('EXPERIMENTAÇÃO')],[al('INVENÇÃO'),de('INVENÇÃO')],[al('INCERTEZA'),de('SUSPENSÃO')],[al('TENTATIVA'),t('desenhos')],
  [ca('RIGOR'),au('CRITÉRIO')],[ca('CONFIANÇA'),au('CONFIANÇA')],[ca('RECONHECIMENTO'),au('RECONHECIMENTO')],[al('ESCOLHA'),au('ESCOLHA')],[al('APROPRIAÇÃO'),au('APROPRIAÇÃO')],[lu('APROPRIAÇÃO'),au('APROPRIAÇÃO')],[al('ARGUMENTAÇÃO'),au('ARGUMENTAÇÃO')],[au('VOZ'),al('EXPOSIÇÃO')],
  [ca('PERGUNTA'),t('orientacoes')],[ca('INTERLOCUÇÃO'),t('orientacoes')],[ca('CUIDADO'),t('orientacoes')],[al('REVISÃO'),t('orientacoes')],[ca('PROVOCAÇÃO'),de('INFLEXÃO')],[eu('ESCUTA'),t('orientacoes')],
- [al('CRÍTICA'),t('entregas')],[al('EXPOSIÇÃO'),t('entregas')],[au('DECISÃO'),t('entregas')],[au('RESPONSABILIDADE'),t('entregas')],[ca('RIGOR'),t('entregas')],
+ [al('CRÍTICA'),t('entregas')],[al('EXPOSIÇÃO'),t('entregas')],[au('DECISÃO'),t('entregas')],[ca('RIGOR'),t('entregas')],
  [au('EMANCIPAÇÃO'),t('pedagogia')],[ca('PARTILHA'),t('pedagogia')],[ca('ACOLHIMENTO'),al('EXPOSIÇÃO')],[ca('GENEROSIDADE'),eu('PRESENÇA')],[ca('EXPERIÊNCIA'),eu('REPERTÓRIO')],
- [lu('MURO'),de('RUPTURA')],[lu('CORPO'),eu('PRESENÇA')],[de('ESTRANHAMENTO'),eu('INQUIETAÇÃO')],[de('ALTERNATIVA'),t('ideias')],[de('RECOMEÇO'),al('TENTATIVA')],[de('RETORNO'),t('patrimonio')],
+ [lu('CORPO'),eu('PRESENÇA')],[de('ESTRANHAMENTO'),eu('INQUIETAÇÃO')],[de('ALTERNATIVA'),t('ideias')],
  /* acontecimentos e transformações do pensamento */
  [lu('VESTÍGIO'),al('ESCOLHA'),1],[ca('PERGUNTA'),au('DISCERNIMENTO'),1],[eu('OBSERVAÇÃO'),eu('PROPOSIÇÃO'),1],
- [ca('ESCUTA'),au('VOZ')],[al('EXPOSIÇÃO'),au('CONFIANÇA')],[al('CROQUI'),de('REVISÃO')],[lu('MURO'),lu('CORPO')],[ca('RIGOR'),al('ARGUMENTAÇÃO')]];
+ [ca('ESCUTA'),au('VOZ')],[al('EXPOSIÇÃO'),au('CONFIANÇA')],[al('CROQUI'),de('REVISÃO')],[ca('RIGOR'),al('ARGUMENTAÇÃO')],
+ /* revisão: novas ligações */
+ [ca('ABERTURA'),eu('AFETAÇÃO')],[ca('ABERTURA'),lu('ATMOSFERA')],[ca('ABERTURA'),au('CONFIANÇA')],
+ [lu('ATMOSFERA'),lu('ENCONTRO')],
+ [lu('ENCONTRO'),eu('MEMÓRIA')],[lu('ENCONTRO'),ca('ESCUTA')],[lu('ENCONTRO'),eu('ESCUTA')],[lu('ENCONTRO'),ca('PERGUNTA')],
+ [au('VOZ'),eu('MEMÓRIA')],[au('VOZ'),ca('ACOLHIMENTO')],[au('VOZ'),eu('AFETAÇÃO')],[au('VOZ'),ca('CONFIANÇA')],
+ [de('ESTRANHAMENTO'),de('ERRÂNCIA')],[de('ESTRANHAMENTO'),al('ERRO')],[de('ESTRANHAMENTO'),al('EXPERIMENTAÇÃO')],[de('ESTRANHAMENTO'),eu('DESEJO')],
+ [eu('DESLOCAMENTO'),de('ERRÂNCIA')],[eu('DESLOCAMENTO'),al('ERRO')],[eu('DESLOCAMENTO'),al('EXPERIMENTAÇÃO')],[eu('DESLOCAMENTO'),['desvio']],[eu('DESLOCAMENTO'),eu('DESEJO')],[eu('DESLOCAMENTO'),['lugar']],[eu('DESLOCAMENTO'),de('ESTRANHAMENTO')],
+ [au('DECISÃO'),al('APROPRIAÇÃO')],[au('DECISÃO'),eu('AFETAÇÃO')],[au('DECISÃO'),al('ARGUMENTAÇÃO')],[au('DECISÃO'),al('AUTORIA')],
+ [al('CRÍTICA'),eu('AFETAÇÃO')],[al('CRÍTICA'),al('EXPOSIÇÃO')],[al('CRÍTICA'),de('INFLEXÃO')],[al('CRÍTICA'),eu('INQUIETAÇÃO')],[al('CRÍTICA'),ca('INTERLOCUÇÃO')],[al('CRÍTICA'),eu('OBSERVAÇÃO')],
+ [al('IMAGINAÇÃO'),ca('GENEROSIDADE')],[al('IMAGINAÇÃO'),lu('PERCEPÇÃO')],
+ [lu('CORPO'),au('VOZ')],[lu('CORPO'),au('CONFIANÇA')],[lu('CORPO'),ca('CONFIANÇA')],[lu('CORPO'),eu('DESEJO')],[lu('CORPO'),al('DESEJO')],
+ /* revisão: elaboradas a partir da dissertação */
+ [lu('PAISAGEM'),t('patrimonio')],[lu('PAISAGEM'),eu('OBSERVAÇÃO')],[lu('PERCEPÇÃO'),t('desenhos')],[lu('MEMÓRIA'),t('patrimonio')],[lu('VESTÍGIO'),al('CROQUI')],[al('APROPRIAÇÃO'),lu('VESTÍGIO')],
+ [au('DISCERNIMENTO'),au('CRITÉRIO')],[ca('PRECISÃO'),au('CRITÉRIO')],[au('EMANCIPAÇÃO'),eu('TRANSFORMAÇÃO')],[ca('CUIDADO'),au('VOZ')],
+ [de('ALTERNATIVA'),al('ESCOLHA')],[de('SUSPENSÃO'),eu('DÚVIDA')],[de('INFLEXÃO'),eu('TRANSFORMAÇÃO')],[de('DESCOBERTA'),eu('DESCOBERTA')],
+ [ca('PARTILHA'),lu('ENCONTRO')],[lu('PRESENÇA'),lu('ENCONTRO')],[eu('INQUIETAÇÃO'),eu('DÚVIDA')],[al('INCERTEZA'),eu('DÚVIDA')],[ca('EXPERIÊNCIA'),lu('MEMÓRIA')],[al('INTUIÇÃO'),eu('SENSIBILIDADE')]];
+{const keyOf=e=>e.join('|'),have=new Set(REL2.map(r=>keyOf(r[0])+'>'+keyOf(r[1]))),src=['VOZ','CONFIANÇA','DESEJO'],CO=['lugar','CORPO'],extra=[];
+ for(const r of REL2)for(const[x,y]of[[r[0],r[1]],[r[1],r[0]]]){if(src.includes(x[1])&&!(y[0]=='lugar'&&y[1]=='CORPO')){const k1=keyOf(CO)+'>'+keyOf(y),k2=keyOf(y)+'>'+keyOf(CO);if(!have.has(k1)&&!have.has(k2)){have.add(k1);extra.push([CO,y])}}}
+ REL2.push(...extra)}
 const REL={
  autonomia:[['sub','alu',1.4],['tag','desenhos',2.1],['tag','patrimonio',-.5],['tag','orientacoes',-.5],['ring','desvio',1.7]],
  desvio:[['tag','orientacoes',.8],['tag','desenhos',1.8],['tag','entregas',-.5],['tag','patrimonio',-.5],['ring','autonomia',.8],['ring','lugar',.8]],
@@ -177,7 +196,7 @@ function ep(f,w){
  if(ST.sub[f]){const it=byKey[f];if(w){const x=it.wl.find(z=>z.w==w);if(x)return onR(x.ang,R+12)}return onR(ST.sub[f].a,R-22)}
  const r=byKey[f];if(w){const x=r.sw.find(z=>z.w==w);if(x&&x.on)return[r.o.x+Math.cos(x.a)*x.rr*r.o.rx*r.sc,r.o.y+Math.sin(x.a)*x.rr*r.o.ry*r.sc]}return[r.o.x,r.o.y]}
 const idOf=(f,w)=>f=='tag'?'tag|'+w:(w?f+'|'+w:f);
-function hit1(id,ids){const[f,w]=id.split('|');return ids.some(x=>x==id||(!w&&x.split('|')[0]==f)||(w&&x==f))}
+function hit1(id,ids){const[f,w]=id.split('|');return ids.some(x=>x==id||(!w&&x.split('|')[0]==f))}
 function hits(F,ids){if(!F)return true;return F.some(id=>hit1(id,ids))}
 function draw(){
  const F=hoverF||focus||(cur?[cur.type=='tag'?'tag|'+cur.key:cur.key]:null);
@@ -260,8 +279,8 @@ const TERMS=[];{const add=(label,ids,group,col)=>TERMS.push({label,ids,group,col
  Object.keys(wm).sort((a,b)=>a.localeCompare(b,'pt')).forEach(w=>add(w,wm[w],'PALAVRAS',null))}
 function conns(ids){const out=[],seen=new Set(),push=(lab,fld,id,c)=>{const key=lab+fld;if(seen.has(key))return;seen.add(key);out.push([lab,fld,id,c])};
  for(const r of REL2){const ia=idOf(r[0][0],r[0][1]),ib=idOf(r[1][0],r[1][1]);
-  if(hit1(ia,ids)||ids.includes(ia)){const[l,f,i]=epLabel(r[1][0],r[1][1]);push(l,f,i,r[1][0])}
-  if(hit1(ib,ids)||ids.includes(ib)){const[l,f,i]=epLabel(r[0][0],r[0][1]);push(l,f,i,r[0][0])}}
+  if(hits(ids,[ia])){const[l,f,i]=epLabel(r[1][0],r[1][1]);push(l,f,i,r[1][0])}
+  if(hits(ids,[ib])){const[l,f,i]=epLabel(r[0][0],r[0][1]);push(l,f,i,r[0][0])}}
  for(const tg in LINKS)for(const an of LINKS[tg]){if(ids.includes('tag|'+tg))push(FN[an]||INIT.sub[an].t,'FIO',an,an);if(ids.includes(an))push(INIT.tag[tg].t,'FIO','tag|'+tg,'tag')}
  return out}
 let selLabel=null;
