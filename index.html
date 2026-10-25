@@ -105,6 +105,9 @@ const REL2=[
  [al('CRÍTICA'),eu('AFETAÇÃO')],[al('CRÍTICA'),al('EXPOSIÇÃO')],[al('CRÍTICA'),de('INFLEXÃO')],[al('CRÍTICA'),eu('INQUIETAÇÃO')],[al('CRÍTICA'),ca('INTERLOCUÇÃO')],[al('CRÍTICA'),eu('OBSERVAÇÃO')],
  [al('IMAGINAÇÃO'),ca('GENEROSIDADE')],[al('IMAGINAÇÃO'),lu('PERCEPÇÃO')],
  [lu('CORPO'),au('VOZ')],[lu('CORPO'),au('CONFIANÇA')],[lu('CORPO'),ca('CONFIANÇA')],[lu('CORPO'),eu('DESEJO')],[lu('CORPO'),al('DESEJO')],
+ /* patrimônio */
+ [ca('EXPERIÊNCIA'),t('patrimonio')],[eu('DESLOCAMENTO'),t('patrimonio')],[al('DESCOBERTA'),t('patrimonio')],[al('REPERTÓRIO'),t('patrimonio')],[eu('TRANSFORMAÇÃO'),t('patrimonio')],[eu('REPERTÓRIO'),t('patrimonio')],[al('IMAGINAÇÃO'),t('patrimonio')],[al('ESCOLHA'),t('patrimonio')],
+ [eu('MEMÓRIA'),t('patrimonio')],[ca('PARTILHA'),t('patrimonio')],[lu('PERCEPÇÃO'),t('patrimonio')],[de('INFLEXÃO'),t('patrimonio')],
  /* revisão: elaboradas a partir da dissertação */
  [lu('PAISAGEM'),t('patrimonio')],[lu('PAISAGEM'),eu('OBSERVAÇÃO')],[lu('PERCEPÇÃO'),t('desenhos')],[lu('MEMÓRIA'),t('patrimonio')],[lu('VESTÍGIO'),al('CROQUI')],[al('APROPRIAÇÃO'),lu('VESTÍGIO')],
  [au('DISCERNIMENTO'),au('CRITÉRIO')],[ca('PRECISÃO'),au('CRITÉRIO')],[au('EMANCIPAÇÃO'),eu('TRANSFORMAÇÃO')],[ca('CUIDADO'),au('VOZ')],
@@ -114,7 +117,7 @@ const REL2=[
  for(const r of REL2)for(const[x,y]of[[r[0],r[1]],[r[1],r[0]]]){if(src.includes(x[1])&&!(y[0]=='lugar'&&y[1]=='CORPO')){const k1=keyOf(CO)+'>'+keyOf(y),k2=keyOf(y)+'>'+keyOf(CO);if(!have.has(k1)&&!have.has(k2)){have.add(k1);extra.push([CO,y])}}}
  REL2.push(...extra)}
 const REL={
- autonomia:[['sub','alu',1.4],['tag','desenhos',2.1],['tag','patrimonio',-.5],['tag','orientacoes',-.5],['ring','desvio',1.7]],
+ autonomia:[['sub','alu',1.6],['tag','desenhos',2.1],['tag','entregas',1.6],['tag','patrimonio',-.5],['tag','orientacoes',-.5],['ring','desvio',1.7]],
  desvio:[['tag','orientacoes',.8],['tag','desenhos',1.8],['tag','entregas',-.5],['tag','patrimonio',-.5],['ring','autonomia',.8],['ring','lugar',.8]],
  lugar:[['tag','orientacoes',.8],['tag','patrimonio',.8],['tag','entregas',-.5],['tag','desenhos',0],['ring','desvio',.8]]};
 let ST=JSON.parse(JSON.stringify(INIT));
@@ -128,7 +131,7 @@ const setF=id=>{focus=id};
 function build(){
  layout();svg.innerHTML='';items=[];byKey={};
  $('defs',{},svg).innerHTML='<filter id="bl" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="12"/></filter><filter id="sh" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="1" dy="2" stdDeviation="1.6" flood-opacity=".18"/></filter>';
- ['ring','cap','rel','str','dots','words','swords','subs','pins','tags'].forEach(k=>L[k]=$('g',['cap','rel','str','dots','pins'].includes(k)?{'pointer-events':'none'}:{},svg));
+ ['ring','cap','rel','str','dots','words','swords','subs','pins','tags'].forEach(k=>L[k]=$('g',['cap','rel','str','dots','pins'].includes(k)?{'pointer-events':'none'}:{},svg));L.cap.setAttribute('opacity','.55');
  const reg=(type,key,o,g,x)=>{const it=Object.assign({type,key,o,g,I:0,e:0,ph:Math.random()},x);items.push(it);byKey[key]=it;return it};
  $('circle',{cx:CX,cy:CY,r:R,fill:'none',stroke:'#dedbd4','stroke-width':10},L.ring);
  for(let a=0;a<360;a+=3.2){const p=onR(a,R-22);$('circle',{cx:p[0],cy:p[1],r:2,fill:'#d3cfc7'},L.ring)}
@@ -141,7 +144,7 @@ function build(){
   const wl=W[k].map(w=>{const tt=$('text',{class:'wd','font-size':10.5,'font-weight':400,'letter-spacing':.8},L.words);tt.textContent=w;const d=$('circle',{r:2.6,fill:o.c},L.words);hov(tt,k+'|'+w);return{w,t:tt,d}});
   reg('sub',k,o,g,{glow,arc,hit,tp,wl})}
  capillary();
- L.capDyn=$('g',{},L.cap);threads=[];for(const k in ST.sub)for(let i=0;i<7;i++){const segs=[...Array(11)].map(()=>$('path',{fill:'none',stroke:CAP,'stroke-linecap':'round'},L.capDyn)),tw=[0,1].map(()=>$('path',{fill:'none',stroke:CAP,'stroke-width':.5,opacity:.22},L.capDyn));threads.push({k,i,segs,tw,last:null})}
+ L.capDyn=$('g',{},L.cap);threads=[];for(const k in ST.sub)for(let i=0;i<7;i++){const segs=[...Array(11)].map(()=>$('path',{fill:'none',stroke:CAP,'stroke-linecap':'round'},L.capDyn)),tw=[0,1].map(()=>$('path',{fill:'none',stroke:CAP,'stroke-width':.45,opacity:.1},L.capDyn));threads.push({k,i,segs,tw,last:null})}
  for(const k in ST.pin){const o=ST.pin[k];$('circle',{cx:o.x,cy:o.y,r:40,fill:CAP},L.pins);
   $('text',{x:o.x,y:o.y-3,'text-anchor':'middle','font-size':17,'font-weight':700,style:'fill:#f7f6f2'},L.pins).textContent=o.t[0];
   $('text',{x:o.x,y:o.y+15,'text-anchor':'middle','font-size':10.5,'font-weight':700,'letter-spacing':1.6,style:'fill:#f7f6f2'},L.pins).textContent=o.t[1]}
@@ -218,7 +221,7 @@ function draw(){
 }
 /* relações de tamanho */
 const ringF=(o,x,y,sc)=>clamp(1-Math.hypot((x-o.x)/(o.rx*sc),(y-o.y)/(o.ry*sc)))**.7;
-const pr=(ax,ay,bx,by)=>clamp(1-Math.max(0,Math.hypot(ax-bx,ay-by)-60)/430);
+const pr=(ax,ay,bx,by)=>clamp(1-Math.hypot(ax-bx,ay-by)/330);
 const anchor=(g,k)=>g=='sub'?onR(ST.sub[k].a,R):[ST[g][k].x,ST[g][k].y];
 const pos0=(g,k)=>g=='sub'?onR(INIT.sub[k].a,R):[INIT[g][k].x,INIT[g][k].y];
 function prox(t){
@@ -252,7 +255,7 @@ function capThreads(){
   const dx=E[0]-S[0],dy=E[1]-S[1],l=Math.hypot(dx,dy),nx=-dy/l,ny=dx/l,bend=(q()-.5)*l*.35,C=[(S[0]+E[0])/2+nx*bend,(S[1]+E[1])/2+ny*bend],ph=q()*6.3,fr=2+q()*2.5;
   const pts=[];for(let j=0;j<=22;j++){const t=j/22,u=1-t,x=u*u*S[0]+2*u*t*C[0]+t*t*E[0],y=u*u*S[1]+2*u*t*C[1]+t*t*E[1],w=Math.sin(t*Math.PI)*7*Math.sin(t*fr*Math.PI+ph);pts.push([x+nx*w,y+ny*w])}
   th.segs.forEach((el,s)=>{const a2=pts.slice(s*2,s*2+3);let d=`M${f1(a2[0][0])} ${f1(a2[0][1])}`;for(let m=1;m<a2.length;m++)d+=`L${f1(a2[m][0])} ${f1(a2[m][1])}`;const t=s/10;
-   el.setAttribute('d',d);el.setAttribute('stroke-width',f1(2.8*(1-t)+.35));el.setAttribute('opacity',(.75*(1-t)+.12).toFixed(2))});
+   el.setAttribute('d',d);el.setAttribute('stroke-width',f1(2.2*(1-t)+.3));el.setAttribute('opacity',(.5*(1-t)*(1-t)+.04).toFixed(2))});
   const B=pts[18],ba=Math.atan2(E[1]-B[1],E[0]-B[0]);th.tw.forEach((el,m)=>{const ta=ba+(m?.45:-.45),L2=26+q()*14;el.setAttribute('d',`M${f1(B[0])} ${f1(B[1])}Q${f1(B[0]+Math.cos(ta)*L2*.6)} ${f1(B[1]+Math.sin(ta)*L2*.6)} ${f1(B[0]+Math.cos(ta)*L2)} ${f1(B[1]+Math.sin(ta)*L2)}`)})}
 }
 function frame(t){prox(t/1000);capThreads();draw();stains(t/1000);requestAnimationFrame(frame)}
